@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PWA Clock Suite</title>
+  <!-- Your manifest -->
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<header>
+  <h1>PWA Clock Suite</h1>
+  <nav>
+    <button class="nav-btn" data-target="#alarmSection">Alarm</button>
+    <button class="nav-btn" data-target="#timerSection">Timer</button>
+    <button class="nav-btn" data-target="#stopwatchSection">Stopwatch</button>
+    <button class="nav-btn" data-target="#worldClockSection">World Clock</button>
+  </nav>
+</header>
+
+<main>
+  <!-- ALARM SECTION -->
+  <section id="alarmSection" class="page-section active">
+    <h2>Alarm Clock</h2>
+    <div id="alarmForm">
+      <label for="alarmTime">Alarm Time:</label>
+      <input type="time" id="alarmTime" required />
+
+      <label for="duration">Ring Duration (secs):</label>
+      <input type="number" id="alarmDuration" min="1" value="30" />
+
+      <label>Repeat Days:</label>
+      <div id="daysCheckboxes">
+        <label><input type="checkbox" value="0" />Sun</label>
+        <label><input type="checkbox" value="1" />Mon</label>
+        <label><input type="checkbox" value="2" />Tue</label>
+        <label><input type="checkbox" value="3" />Wed</label>
+        <label><input type="checkbox" value="4" />Thu</label>
+        <label><input type="checkbox" value="5" />Fri</label>
+        <label><input type="checkbox" value="6" />Sat</label>
+      </div>
+
+      <label for="soundFile">Custom Sound (optional):</label>
+      <input type="file" id="soundFile" accept="audio/*" />
+
+      <button id="setAlarmBtn">Set Alarm</button>
+    </div>
+
+    <hr />
+
+    <h3>Existing Alarms</h3>
+    <table id="alarmsTable">
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Days</th>
+          <th>Duration</th>
+          <th>Sound</th>
+          <th>Delete</th>
+        </tr>
+      </thead>
+      <tbody id="alarmsTbody"></tbody>
+    </table>
+  </section>
+
+  <!-- TIMER SECTION -->
+  <section id="timerSection" class="page-section">
+    <h2>Countdown Timer</h2>
+    <div class="timer-controls">
+      <label for="timerMinutes">Minutes:</label>
+      <input type="number" id="timerMinutes" min="0" value="0" />
+      <label for="timerSeconds">Seconds:</label>
+      <input type="number" id="timerSeconds" min="0" max="59" value="30" />
+      <button id="startTimerBtn">Start</button>
+      <button id="stopTimerBtn">Stop</button>
+      <button id="resetTimerBtn">Reset</button>
+    </div>
+    <div class="timer-display">
+      <span id="timerDisplay">00:30</span>
+    </div>
+  </section>
+
+  <!-- STOPWATCH SECTION -->
+  <section id="stopwatchSection" class="page-section">
+    <h2>Stopwatch</h2>
+    <div class="stopwatch-display">
+      <span id="stopwatchDisplay">00:00:00</span>
+    </div>
+    <div class="stopwatch-controls">
+      <button id="startStopwatchBtn">Start</button>
+      <button id="stopStopwatchBtn">Stop</button>
+      <button id="resetStopwatchBtn">Reset</button>
+    </div>
+  </section>
+
+  <!-- WORLD CLOCK SECTION -->
+  <section id="worldClockSection" class="page-section">
+    <h2>World Clock</h2>
+    <label for="timeZoneSelect">Select Time Zone:</label>
+    <select id="timeZoneSelect">
+      <option value="UTC">UTC</option>
+      <option value="America/New_York">New York (UTC-05/-04)</option>
+      <option value="America/Los_Angeles">Los Angeles (UTC-08/-07)</option>
+      <option value="Europe/London">London (UTC+0/+1)</option>
+      <option value="Europe/Berlin">Berlin (UTC+1/+2)</option>
+      <option value="Asia/Tokyo">Tokyo (UTC+9)</option>
+      <option value="Australia/Sydney">Sydney (UTC+10/+11)</option>
+    </select>
+    <div class="world-clock-display">
+      <span id="worldClockDisplay">--:--:--</span>
+    </div>
+  </section>
+</main>
+
+<!-- Hidden audio element to play alarm or timer sound -->
+<audio id="alarmAudio" preload="auto"></audio>
+
+<script src="app.js"></script>
+<script>
+  // Register the service worker for offline/PWA
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("service-worker.js")
+      .then(() => console.log("Service Worker registered"))
+      .catch((err) => console.log("SW registration failed", err));
+  }
+</script>
+</body>
+</html>
