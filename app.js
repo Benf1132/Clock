@@ -38,6 +38,12 @@ let activeAlarm = null;
 let snoozeTimeout = null;
 let alarms = [];
 
+function unlockAudio() {
+  const silent = new Audio();
+  silent.src = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEA..."; // base64 silent WAV
+  silent.play().catch(() => {});
+}
+
 // Dark Mode Theme
 function applyTheme(theme) {
   if (theme === "dark") document.body.classList.add("dark");
@@ -330,3 +336,4 @@ window.addEventListener("load", () => {
   populateTimeZones();
   checkAlarms();
 });
+document.body.addEventListener("click", unlockAudio, { once: true });
