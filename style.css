@@ -168,16 +168,24 @@ table thead {
   max-width: 300px;
 }
 
+/* --------------------------
+   Timer Progress Circle
+---------------------------*/
 .circle-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   margin-top: 1em;
+  width: 100%;
+  overflow: visible;
 }
 
-/* --------------------------
-   Timer Progress Circle
----------------------------*/
+.progress-circle {
+  width: 200px;
+  height: 200px;
+  overflow: visible;
+}
+
 .progress-circle circle.bg {
   fill: none;
   stroke: #ccc;
@@ -193,6 +201,13 @@ table thead {
   transform: rotate(-90deg);
   transform-origin: 50% 50%;
   transition: stroke-dashoffset 0.5s ease;
+}
+
+.circle-label {
+  margin-top: 1em;
+  font-size: 1.8em;
+  font-weight: bold;
+  color: #3f51b5;
 }
 
 /* --------------------------
@@ -216,7 +231,7 @@ table thead {
   padding: 2em;
   border-radius: 10px;
   text-align: center;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
 }
 
 /* --------------------------
@@ -340,27 +355,13 @@ body.dark .modal-box {
     display: block;
     margin-top: 0.8em;
   }
-}
 
-/* Ensure circle is properly visible/centered on mobile */
-.circle-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-top: 1em;
-  overflow: visible;
-  width: 100%;
-}
-
-.progress-circle {
-  width: 200px;
-  height: 200px;
-  overflow: visible;
-}
-
-@media (max-width: 600px) {
   .progress-circle {
     width: 180px;
     height: 180px;
+  }
+
+  .circle-label {
+    font-size: 1.6em;
   }
 }
