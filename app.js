@@ -1,413 +1,341 @@
-// app.js
-
-/* --------------------------------------------------
-   GLOBALS / DOM GETTERS
-----------------------------------------------------*/
+// DOM Elements
 const navButtons = document.querySelectorAll(".nav-btn");
 const sections = document.querySelectorAll(".page-section");
-
-// ALARM SELECTORS
 const alarmTimeInput = document.getElementById("alarmTime");
 const alarmDurationInput = document.getElementById("alarmDuration");
 const daysCheckboxes = document.querySelectorAll("#daysCheckboxes input[type='checkbox']");
 const soundFileInput = document.getElementById("soundFile");
 const setAlarmBtn = document.getElementById("setAlarmBtn");
-const alarmsTableBody = document.getElementById("alarmsTbody");
+const soundDropdown = document.getElementById("soundDropdown");
+const customFileLabel = document.getElementById("customFileLabel");
+const testSoundBtn = document.getElementById("testSoundBtn");
+const alarmsTbody = document.getElementById("alarmsTbody");
+const alarmAudio = document.getElementById("alarmAudio");
+const darkModeToggle = document.getElementById("darkModeToggle");
 
-// TIMER SELECTORS
 const timerMinutesInput = document.getElementById("timerMinutes");
 const timerSecondsInput = document.getElementById("timerSeconds");
 const startTimerBtn = document.getElementById("startTimerBtn");
 const stopTimerBtn = document.getElementById("stopTimerBtn");
 const resetTimerBtn = document.getElementById("resetTimerBtn");
 const timerDisplay = document.getElementById("timerDisplay");
+const timerProgressCircle = document.querySelector(".progress-circle .progress");
 
-// STOPWATCH SELECTORS
 const stopwatchDisplay = document.getElementById("stopwatchDisplay");
 const startStopwatchBtn = document.getElementById("startStopwatchBtn");
 const stopStopwatchBtn = document.getElementById("stopStopwatchBtn");
 const resetStopwatchBtn = document.getElementById("resetStopwatchBtn");
 
-// WORLD CLOCK SELECTORS
 const timeZoneSelect = document.getElementById("timeZoneSelect");
+const timezoneSearch = document.getElementById("timezoneSearch");
 const worldClockDisplay = document.getElementById("worldClockDisplay");
 
-// AUDIO
-const alarmAudio = document.getElementById("alarmAudio");
+const snoozeBtn = document.getElementById("snoozeBtn");
+const stopAlarmBtn = document.getElementById("stopAlarmBtn");
+const alarmControls = document.getElementById("alarmControls");
 
-/* --------------------------------------------------
-   NAVIGATION LOGIC
-----------------------------------------------------*/
+let activeAlarm = null;
+let snoozeTimeout = null;
+let alarms = [];
+
+// Dark Mode Theme
+function applyTheme(theme) {
+  if (theme === "dark") document.body.classList.add("dark");
+  else document.body.classList.remove("dark");
+}
+function loadTheme() {
+  const savedTheme = localStorage.getItem("clockTheme");
+  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const theme = savedTheme || (prefersDark ? "dark" : "light");
+  applyTheme(theme);
+}
+darkModeToggle?.addEventListener("click", () => {
+  const isDark = document.body.classList.toggle("dark");
+  localStorage.setItem("clockTheme", isDark ? "dark" : "light");
+});
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", e => {
+  const newTheme = e.matches ? "dark" : "light";
+  applyTheme(newTheme);
+  localStorage.setItem("clockTheme", newTheme);
+});
+loadTheme();
+
+// Navigation
 navButtons.forEach(btn => {
   btn.addEventListener("click", () => {
     const target = btn.getAttribute("data-target");
     sections.forEach(sec => {
       sec.classList.remove("active");
-      if (sec.matches(target)) {
-        sec.classList.add("active");
-      }
+      if (sec.matches(target)) sec.classList.add("active");
     });
   });
 });
-
-/* --------------------------------------------------
-   ALARM CLOCK LOGIC
-----------------------------------------------------*/
-let alarms = []; // In-memory array of alarms
-
-window.addEventListener("load", () => {
-  loadAlarmsFromStorage();
-  renderAlarms();
-
-  // Start the repeated check for alarm triggers
-  startAlarmCheckLoop();
-
-  // Request Notification permission if needed
-  if (Notification && Notification.permission !== "granted") {
-    Notification.requestPermission();
-  }
-
-  // Start separate intervals for Timer, Stopwatch, and World Clock updates
-  updateWorldClock();
-  setInterval(updateWorldClock, 1000);
-});
-
-setAlarmBtn.addEventListener("click", createAlarm);
-
-function createAlarm() {
-  const timeVal = alarmTimeInput.value; // e.g., "07:30"
-  if (!timeVal) {
-    alert("Please select a valid time");
-    return;
-  }
-
-  const ringDuration = parseInt(alarmDurationInput.value, 10) || 30;
-  // Collect selected days
-  const selectedDays = [];
-  daysCheckboxes.forEach((cb) => {
-    if (cb.checked) {
-      selectedDays.push(parseInt(cb.value, 10));
-    }
-  });
-  if (selectedDays.length === 0) {
-    alert("Please select at least one day.");
-    return;
-  }
-
-  // Handle custom sound
-  let customSoundDataUrl = "";
+// Set Alarm
+setAlarmBtn?.addEventListener("click", () => {
+  const timeVal = alarmTimeInput.value;
+  const ringDuration = parseInt(alarmDurationInput.value) || 30;
+  const selectedDays = Array.from(daysCheckboxes).filter(cb => cb.checked).map(cb => parseInt(cb.value));
   const file = soundFileInput.files[0];
-  if (file) {
+  const soundVal = soundDropdown.value;
+
+  if (!timeVal || selectedDays.length === 0) {
+    alert("Set a time and at least one day.");
+    return;
+  }
+
+  if (soundVal === "custom" && file) {
     const reader = new FileReader();
-    reader.onload = (evt) => {
-      customSoundDataUrl = evt.target.result;
-      saveAlarm(timeVal, ringDuration, selectedDays, customSoundDataUrl);
-    };
+    reader.onload = e => saveAlarm(timeVal, ringDuration, selectedDays, e.target.result);
     reader.readAsDataURL(file);
   } else {
-    // No custom file
-    saveAlarm(timeVal, ringDuration, selectedDays, "");
+    saveAlarm(timeVal, ringDuration, selectedDays, soundVal);
   }
+});
+
+function saveAlarm(time, duration, days, sound) {
+  const alarm = {
+    id: Date.now(),
+    time,
+    duration,
+    days,
+    sound,
+    lastTriggerDate: null
+  };
+  alarms.push(alarm);
+  localStorage.setItem("alarms", JSON.stringify(alarms));
+  renderAlarms();
 }
 
-function saveAlarm(timeVal, duration, days, soundDataUrl) {
-  // Store a lastTriggerDate to prevent multiple triggers the same day
-  const alarmObj = {
-    id: Date.now(),
-    time: timeVal,           // "HH:MM" (24hr format)
-    duration: duration,
-    days: days,
-    customSound: soundDataUrl,
-    lastTriggerDate: null    // e.g. "YYYY-MM-DD" when triggered
-  };
-
-  alarms.push(alarmObj);
-  updateLocalStorage();
+function loadAlarms() {
+  alarms = JSON.parse(localStorage.getItem("alarms")) || [];
   renderAlarms();
-  clearAlarmForm();
 }
 
 function renderAlarms() {
-  alarmsTableBody.innerHTML = "";
+  alarmsTbody.innerHTML = "";
   alarms.forEach(alarm => {
     const row = document.createElement("tr");
-
-    // Time
-    const timeTd = document.createElement("td");
-    timeTd.textContent = alarm.time;
-    row.appendChild(timeTd);
-
-    // Days
-    const daysTd = document.createElement("td");
-    daysTd.textContent = alarm.days.join(", ");
-    row.appendChild(daysTd);
-
-    // Duration
-    const durationTd = document.createElement("td");
-    durationTd.textContent = alarm.duration + "s";
-    row.appendChild(durationTd);
-
-    // Sound
-    const soundTd = document.createElement("td");
-    soundTd.textContent = alarm.customSound ? "Custom" : "Default";
-    row.appendChild(soundTd);
-
-    // Delete
-    const deleteTd = document.createElement("td");
-    const delBtn = document.createElement("button");
-    delBtn.textContent = "Delete";
-    delBtn.addEventListener("click", () => {
-      deleteAlarm(alarm.id);
-    });
-    deleteTd.appendChild(delBtn);
-    row.appendChild(deleteTd);
-
-    alarmsTableBody.appendChild(row);
+    row.innerHTML = `
+      <td>${alarm.time}</td>
+      <td>${alarm.days.map(d => ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d]).join(", ")}</td>
+      <td>${alarm.duration}s</td>
+      <td>${alarm.sound.includes("data:") ? "Custom" : alarm.sound.split("/").pop()}</td>
+      <td><button onclick="deleteAlarm(${alarm.id})">🗑️</button></td>
+    `;
+    alarmsTbody.appendChild(row);
   });
 }
 
 function deleteAlarm(id) {
   alarms = alarms.filter(a => a.id !== id);
-  updateLocalStorage();
+  localStorage.setItem("alarms", JSON.stringify(alarms));
   renderAlarms();
 }
 
-function clearAlarmForm() {
-  alarmTimeInput.value = "";
-  alarmDurationInput.value = "30";
-  daysCheckboxes.forEach(cb => cb.checked = false);
-  soundFileInput.value = "";
-}
-
-function loadAlarmsFromStorage() {
-  const stored = localStorage.getItem("pwaAlarms");
-  if (stored) {
-    alarms = JSON.parse(stored);
-  }
-}
-
-function updateLocalStorage() {
-  localStorage.setItem("pwaAlarms", JSON.stringify(alarms));
-}
-
-// Alarm Checking
-function startAlarmCheckLoop() {
+function checkAlarms() {
   setInterval(() => {
     const now = new Date();
-    const currentDayIndex = now.getDay();     // 0=Sun, 1=Mon, ... 6=Sat
-    const currentTime = now.toTimeString().slice(0, 5); // "HH:MM"
-    const currentDateString = now.toISOString().slice(0, 10); // "YYYY-MM-DD"
+    const currentTime = now.toTimeString().slice(0, 5);
+    const currentDay = now.getDay();
+    const dateStr = now.toISOString().slice(0, 10);
 
     alarms.forEach(alarm => {
-      if (alarm.days.includes(currentDayIndex)) {
-        if (alarm.time === currentTime) {
-          // Check if we already triggered today
-          if (alarm.lastTriggerDate === currentDateString) {
-            return; // skip if triggered already
-          }
-          ringAlarm(alarm);
-          // Mark triggered
-          alarm.lastTriggerDate = currentDateString;
-          updateLocalStorage();
-        }
+      if (
+        alarm.time === currentTime &&
+        alarm.days.includes(currentDay) &&
+        alarm.lastTriggerDate !== dateStr
+      ) {
+        triggerAlarm(alarm);
+        alarm.lastTriggerDate = dateStr;
+        localStorage.setItem("alarms", JSON.stringify(alarms));
       }
     });
   }, 1000);
 }
 
-let alarmTimeoutId = null;
-function ringAlarm(alarm) {
-  // Stop any existing alarm
-  if (alarmTimeoutId) {
-    clearTimeout(alarmTimeoutId);
-    alarmTimeoutId = null;
+function triggerAlarm(alarm) {
+  activeAlarm = alarm;
+  alarmAudio.src = alarm.sound;
+  alarmAudio.loop = true;
+  alarmAudio.play();
+
+  alarmControls.style.display = "flex";
+
+  setTimeout(() => {
+    if (!alarmAudio.loop) {
+      alarmControls.style.display = "none";
+    }
     alarmAudio.pause();
     alarmAudio.currentTime = 0;
-  }
-
-  // Set audio source (if user gave customSound, use it; else default to alarm1.mp3)
-  if (alarm.customSound) {
-    alarmAudio.src = alarm.customSound;
-  } else {
-    alarmAudio.src = "audio/alarm1.mp3"; // your default alarm sound
-  }
-
-  // Play alarm
-  alarmAudio.play().catch(err => console.log("Audio play error:", err));
-
-  // Stop after alarm.duration seconds
-  alarmTimeoutId = setTimeout(() => {
-    alarmAudio.pause();
-    alarmAudio.currentTime = 0;
-    alarmTimeoutId = null;
+    alarmAudio.loop = false;
   }, alarm.duration * 1000);
-
-  // Show Notification if possible
-  if (Notification.permission === "granted") {
-    new Notification("Alarm!", {
-      body: `Time: ${alarm.time}`
-      // icon: "icons/clock1.png" // optional icon
-    });
-  }
-
-  // Vibration if supported
-  if (navigator.vibrate) {
-    navigator.vibrate(alarm.duration * 1000);
-  }
 }
 
-/* --------------------------------------------------
-   COUNTDOWN TIMER LOGIC
-----------------------------------------------------*/
-let timerInterval = null;
-let timerRemainingSeconds = 0;
+// Snooze & Stop
+snoozeBtn.addEventListener("click", () => {
+  alarmAudio.pause();
+  alarmAudio.currentTime = 0;
+  alarmAudio.loop = false;
+  alarmControls.style.display = "none";
 
-startTimerBtn.addEventListener("click", () => {
-  const minutes = parseInt(timerMinutesInput.value, 10) || 0;
-  const seconds = parseInt(timerSecondsInput.value, 10) || 0;
-  timerRemainingSeconds = minutes * 60 + seconds;
+  if (snoozeTimeout) clearTimeout(snoozeTimeout);
 
-  if (timerRemainingSeconds <= 0) {
-    alert("Please enter a valid time > 0");
-    return;
-  }
-
-  startTimer();
+  snoozeTimeout = setTimeout(() => {
+    if (activeAlarm) triggerAlarm(activeAlarm);
+  }, 5 * 60 * 1000);
 });
 
-stopTimerBtn.addEventListener("click", () => {
-  stopTimer();
+stopAlarmBtn.addEventListener("click", () => {
+  alarmAudio.pause();
+  alarmAudio.currentTime = 0;
+  alarmAudio.loop = false;
+  activeAlarm = null;
+  alarmControls.style.display = "none";
+  if (snoozeTimeout) clearTimeout(snoozeTimeout);
 });
 
-resetTimerBtn.addEventListener("click", () => {
-  resetTimer();
+
+// Timer
+let timerInterval;
+let timerStartSeconds;
+
+startTimerBtn?.addEventListener("click", () => {
+  const min = parseInt(timerMinutesInput.value) || 0;
+  const sec = parseInt(timerSecondsInput.value) || 0;
+  timerStartSeconds = min * 60 + sec;
+  if (timerStartSeconds <= 0) return alert("Set time > 0");
+  startTimer(timerStartSeconds);
 });
 
-function startTimer() {
-  stopTimer(); // in case it's running
-  updateTimerDisplay(timerRemainingSeconds);
+function startTimer(seconds) {
+  clearInterval(timerInterval);
+  let remaining = seconds;
+  updateTimerDisplay(remaining);
+  updateProgressCircle(remaining, seconds);
 
   timerInterval = setInterval(() => {
-    timerRemainingSeconds--;
-    if (timerRemainingSeconds <= 0) {
-      stopTimer();
+    remaining--;
+    updateTimerDisplay(remaining);
+    updateProgressCircle(remaining, seconds);
+    if (remaining <= 0) {
+      clearInterval(timerInterval);
       timerEnd();
-    } else {
-      updateTimerDisplay(timerRemainingSeconds);
     }
   }, 1000);
 }
 
-function stopTimer() {
-  if (timerInterval) {
-    clearInterval(timerInterval);
-    timerInterval = null;
-  }
-}
-
-function resetTimer() {
-  stopTimer();
-  timerMinutesInput.value = "0";
-  timerSecondsInput.value = "30";
-  timerDisplay.textContent = "00:30";
-  timerRemainingSeconds = 0;
-}
-
-function updateTimerDisplay(seconds) {
-  const mm = String(Math.floor(seconds / 60)).padStart(2, "0");
-  const ss = String(seconds % 60).padStart(2, "0");
+function updateTimerDisplay(secs) {
+  const mm = String(Math.floor(secs / 60)).padStart(2, "0");
+  const ss = String(secs % 60).padStart(2, "0");
   timerDisplay.textContent = `${mm}:${ss}`;
 }
 
-function timerEnd() {
-  // Play a short beep
-  alarmAudio.src = "audio/alarm1.mp3"; // or another beep
-  alarmAudio.currentTime = 0;
-  alarmAudio.play().catch(err => console.log(err));
+function updateProgressCircle(current, total) {
+  const ratio = (total - current) / total;
+  const length = 2 * Math.PI * 90;
+  timerProgressCircle.style.strokeDashoffset = length * (1 - ratio);
+}
 
+function timerEnd() {
+  timerDisplay.textContent = "00:00";
+  alarmAudio.src = "audio/alarm1.mp3";
+  alarmAudio.loop = false;
+  alarmAudio.play();
   setTimeout(() => {
     alarmAudio.pause();
     alarmAudio.currentTime = 0;
-  }, 5000); // beep for 5 seconds
-
-  // Optional Notification
-  if (Notification.permission === "granted") {
-    new Notification("Timer Done!", {
-      body: "Countdown finished"
-    });
-  }
-
-  // Optional Vibration
-  if (navigator.vibrate) {
-    navigator.vibrate(3000); // vibrate for 3s
-  }
+  }, 3000);
 }
 
-/* --------------------------------------------------
-   STOPWATCH LOGIC
-----------------------------------------------------*/
+stopTimerBtn?.addEventListener("click", () => clearInterval(timerInterval));
+resetTimerBtn?.addEventListener("click", () => {
+  clearInterval(timerInterval);
+  timerDisplay.textContent = "00:30";
+  timerProgressCircle.style.strokeDashoffset = 565.48;
+});
+
+// Stopwatch
 let stopwatchInterval = null;
-let stopwatchElapsedSeconds = 0; // store total elapsed time
+let stopwatchSeconds = 0;
 
-startStopwatchBtn.addEventListener("click", startStopwatch);
-stopStopwatchBtn.addEventListener("click", stopStopwatch);
-resetStopwatchBtn.addEventListener("click", resetStopwatch);
-
-function startStopwatch() {
-  if (stopwatchInterval) return; // already running
-
+startStopwatchBtn?.addEventListener("click", () => {
+  if (stopwatchInterval) return;
   stopwatchInterval = setInterval(() => {
-    stopwatchElapsedSeconds++;
+    stopwatchSeconds++;
     updateStopwatchDisplay();
   }, 1000);
+});
+
+stopStopwatchBtn?.addEventListener("click", () => {
+  clearInterval(stopwatchInterval);
+  stopwatchInterval = null;
+});
+
+resetStopwatchBtn?.addEventListener("click", () => {
+  clearInterval(stopwatchInterval);
+  stopwatchInterval = null;
+  stopwatchSeconds = 0;
+  updateStopwatchDisplay();
+});
+
+function updateStopwatchDisplay() {
+  const d = Math.floor(stopwatchSeconds / 86400);
+  const h = Math.floor((stopwatchSeconds % 86400) / 3600);
+  const m = Math.floor((stopwatchSeconds % 3600) / 60);
+  const s = stopwatchSeconds % 60;
+  stopwatchDisplay.textContent = `${d}d ${String(h).padStart(2, "0")}h ${String(m).padStart(2, "0")}m ${String(s).padStart(2, "0")}s`;
 }
 
-function stopStopwatch() {
-  if (stopwatchInterval) {
-    clearInterval(stopwatchInterval);
-    stopwatchInterval = null;
+// World Clock
+function populateTimeZones() {
+  timeZoneSelect.innerHTML = "";
+  try {
+    const zones = Intl.supportedValuesOf("timeZone");
+    zones.forEach(tz => {
+      const opt = document.createElement("option");
+      opt.value = tz;
+      opt.textContent = tz;
+      timeZoneSelect.appendChild(opt);
+    });
+  } catch {
+    ["UTC", "America/New_York", "Europe/London"].forEach(tz => {
+      const opt = document.createElement("option");
+      opt.value = tz;
+      opt.textContent = tz;
+      timeZoneSelect.appendChild(opt);
+    });
   }
 }
 
-function resetStopwatch() {
-  stopStopwatch();
-  stopwatchElapsedSeconds = 0;
-  updateStopwatchDisplay();
-}
+timezoneSearch?.addEventListener("input", () => {
+  const filter = timezoneSearch.value.toLowerCase();
+  const options = timeZoneSelect.options;
+  for (let i = 0; i < options.length; i++) {
+    const text = options[i].textContent.toLowerCase();
+    options[i].style.display = text.includes(filter) ? "" : "none";
+  }
+});
 
-function updateStopwatchDisplay() {
-  const hours = Math.floor(stopwatchElapsedSeconds / 3600);
-  const mins = Math.floor((stopwatchElapsedSeconds % 3600) / 60);
-  const secs = stopwatchElapsedSeconds % 60;
-
-  const hh = String(hours).padStart(2, "0");
-  const mm = String(mins).padStart(2, "0");
-  const ss = String(secs).padStart(2, "0");
-
-  stopwatchDisplay.textContent = `${hh}:${mm}:${ss}`;
-}
-
-/* --------------------------------------------------
-   WORLD CLOCK LOGIC
-----------------------------------------------------*/
-timeZoneSelect.addEventListener("change", updateWorldClock);
+timeZoneSelect?.addEventListener("change", updateWorldClock);
 
 function updateWorldClock() {
   const tz = timeZoneSelect.value;
-  try {
-    const now = new Date();
-    const options = {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: false,
-      timeZone: tz,
-    };
-    const formatter = new Intl.DateTimeFormat([], options);
-    const formatted = formatter.format(now);
-    worldClockDisplay.textContent = formatted;
-  } catch (err) {
-    console.warn("TimeZone formatting not supported, fallback to UTC.");
-    worldClockDisplay.textContent = new Date().toUTCString();
-  }
+  const now = new Date();
+  const formatter = new Intl.DateTimeFormat([], {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    timeZone: tz,
+    hour12: false
+  });
+  worldClockDisplay.textContent = formatter.format(now);
 }
+
+setInterval(updateWorldClock, 1000);
+
+// Init
+window.addEventListener("load", () => {
+  loadAlarms();
+  populateTimeZones();
+  checkAlarms();
+});
