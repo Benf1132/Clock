@@ -307,15 +307,6 @@ function populateTimeZones() {
   }
 }
 
-timezoneSearch?.addEventListener("input", () => {
-  const filter = timezoneSearch.value.toLowerCase();
-  const options = timeZoneSelect.options;
-  for (let i = 0; i < options.length; i++) {
-    const text = options[i].textContent.toLowerCase();
-    options[i].style.display = text.includes(filter) ? "" : "none";
-  }
-});
-
 timeZoneSelect?.addEventListener("change", updateWorldClock);
 
 function updateWorldClock() {
