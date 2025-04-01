@@ -39,9 +39,12 @@ let snoozeTimeout = null;
 let alarms = [];
 
 function unlockAudio() {
-  const silent = new Audio();
-  silent.src = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEA..."; // base64 silent WAV
-  silent.play().catch(() => {});
+  const test = document.createElement("audio");
+  test.src = "audio/alarm1.mp3"; // Use an actual small audio file
+  test.play().then(() => {
+    test.pause();
+    test.currentTime = 0;
+  }).catch(() => {});
 }
 
 // Dark Mode Theme
