@@ -20,16 +20,14 @@
   </header>
 
   <main>
-    <!-- ALARM SECTION -->
+    <!-- Alarm Section -->
     <section id="alarmSection" class="page-section active">
       <h2>Alarm Clock</h2>
       <div id="alarmForm">
         <label for="alarmTime">Alarm Time:</label>
         <input type="time" id="alarmTime" required />
-
         <label for="alarmDuration">Ring Duration (secs):</label>
         <input type="number" id="alarmDuration" min="1" value="30" />
-
         <label>Repeat Days:</label>
         <div id="daysCheckboxes">
           <label><input type="checkbox" value="0" />Sun</label>
@@ -68,22 +66,20 @@
       </table>
     </section>
 
-    <!-- TIMER SECTION -->
+    <!-- Timer Section -->
     <section id="timerSection" class="page-section">
       <h2>Countdown Timer</h2>
       <div class="timer-controls">
         <label for="timerMinutes">Minutes:</label>
         <input type="number" id="timerMinutes" min="0" value="0" />
-
         <label for="timerSeconds">Seconds:</label>
         <input type="number" id="timerSeconds" min="0" max="59" value="30" />
-
         <button id="startTimerBtn">Start</button>
-        <button id="stopTimerBtn">Stop</button>
+        <button id="pauseTimerBtn">Pause</button>
         <button id="resetTimerBtn">Reset</button>
       </div>
       <div class="circle-container">
-        <svg class="progress-circle" width="200" height="200">
+        <svg class="progress-circle" width="200" height="200" viewBox="0 0 200 200">
           <circle class="bg" cx="100" cy="100" r="90"/>
           <circle class="progress" cx="100" cy="100" r="90"/>
         </svg>
@@ -91,7 +87,7 @@
       </div>
     </section>
 
-    <!-- STOPWATCH SECTION -->
+    <!-- Stopwatch Section -->
     <section id="stopwatchSection" class="page-section">
       <h2>Stopwatch</h2>
       <div class="stopwatch-display" id="stopwatchDisplay">00d 00h 00m 00s</div>
@@ -102,7 +98,7 @@
       </div>
     </section>
 
-    <!-- WORLD CLOCK SECTION -->
+    <!-- World Clock Section -->
     <section id="worldClockSection" class="page-section">
       <h2>World Clock</h2>
       <label for="timeZoneSelect">Select Time Zone:</label>
@@ -113,9 +109,9 @@
     </section>
   </main>
 
-<audio id="alarmAudio" preload="auto" playsinline></audio>
+  <audio id="alarmAudio" preload="auto" playsinline></audio>
 
-  <!-- MODAL -->
+  <!-- Modal for Alarm -->
   <div id="alarmControls" class="modal-controls">
     <div class="modal-box">
       <p>⏰ Alarm Ringing</p>
