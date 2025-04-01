@@ -27,7 +27,6 @@ const stopStopwatchBtn = document.getElementById("stopStopwatchBtn");
 const resetStopwatchBtn = document.getElementById("resetStopwatchBtn");
 
 const timeZoneSelect = document.getElementById("timeZoneSelect");
-const timezoneSearch = document.getElementById("timezoneSearch");
 const worldClockDisplay = document.getElementById("worldClockDisplay");
 
 const snoozeBtn = document.getElementById("snoozeBtn");
@@ -39,8 +38,9 @@ let snoozeTimeout = null;
 let alarms = [];
 
 function unlockAudio() {
+  // Attempt to play a short audio after a user gesture so mobile browsers allow future .play()
   const test = document.createElement("audio");
-  test.src = "audio/alarm1.mp3"; // Use an actual small audio file
+  test.src = "audio/alarm1.mp3";
   test.play().then(() => {
     test.pause();
     test.currentTime = 0;
@@ -79,7 +79,8 @@ navButtons.forEach(btn => {
     });
   });
 });
-// Set Alarm
+
+// Alarm Setup
 setAlarmBtn?.addEventListener("click", () => {
   const timeVal = alarmTimeInput.value;
   const ringDuration = parseInt(alarmDurationInput.value) || 30;
@@ -88,11 +89,12 @@ setAlarmBtn?.addEventListener("click", () => {
   const soundVal = soundDropdown.value;
 
   if (!timeVal || selectedDays.length === 0) {
-    alert("Set a time and at least one day.");
+    alert("Please set a valid time and select at least one day.");
     return;
   }
 
   if (soundVal === "custom" && file) {
+    // If user chose custom file, read as Base64
     const reader = new FileReader();
     reader.onload = e => saveAlarm(timeVal, ringDuration, selectedDays, e.target.result);
     reader.readAsDataURL(file);
@@ -124,6 +126,7 @@ function renderAlarms() {
   alarmsTbody.innerHTML = "";
   alarms.forEach(alarm => {
     const row = document.createElement("tr");
+    // Use backticks so the HTML actually parses correctly:
     row.innerHTML = `
       <td>${alarm.time}</td>
       <td>${alarm.days.map(d => ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d]).join(", ")}</td>
@@ -135,11 +138,12 @@ function renderAlarms() {
   });
 }
 
-function deleteAlarm(id) {
+// Delete alarm must be globally accessible for onclick to work
+window.deleteAlarm = function(id) {
   alarms = alarms.filter(a => a.id !== id);
   localStorage.setItem("alarms", JSON.stringify(alarms));
   renderAlarms();
-}
+};
 
 function checkAlarms() {
   setInterval(() => {
@@ -166,66 +170,102 @@ function triggerAlarm(alarm) {
   activeAlarm = alarm;
   alarmAudio.src = alarm.sound;
   alarmAudio.loop = true;
-  alarmAudio.play();
+  alarmAudio.play().catch(() => { /* handle play errors */ });
 
   alarmControls.style.display = "flex";
 
   setTimeout(() => {
-    if (!alarmAudio.loop) {
-      alarmControls.style.display = "none";
-    }
+    // Stop alarm automatically after 'alarm.duration' seconds
+    alarmAudio.loop = false;
     alarmAudio.pause();
     alarmAudio.currentTime = 0;
-    alarmAudio.loop = false;
+    alarmControls.style.display = "none";
   }, alarm.duration * 1000);
 }
 
 // Snooze & Stop
 snoozeBtn.addEventListener("click", () => {
+  alarmAudio.loop = false;
   alarmAudio.pause();
   alarmAudio.currentTime = 0;
-  alarmAudio.loop = false;
   alarmControls.style.display = "none";
 
   if (snoozeTimeout) clearTimeout(snoozeTimeout);
 
+  // Snooze 5 minutes
   snoozeTimeout = setTimeout(() => {
     if (activeAlarm) triggerAlarm(activeAlarm);
   }, 5 * 60 * 1000);
 });
 
 stopAlarmBtn.addEventListener("click", () => {
+  alarmAudio.loop = false;
   alarmAudio.pause();
   alarmAudio.currentTime = 0;
-  alarmAudio.loop = false;
   activeAlarm = null;
   alarmControls.style.display = "none";
   if (snoozeTimeout) clearTimeout(snoozeTimeout);
 });
 
+// Test Sound Button
+testSoundBtn.addEventListener("click", () => {
+  const file = soundFileInput.files[0];
+  const soundVal = soundDropdown.value;
+  
+  // If custom chosen and file present
+  if (soundVal === "custom" && file) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      alarmAudio.src = e.target.result;
+      alarmAudio.loop = false;
+      alarmAudio.play().catch(()=>{});
+    };
+    reader.readAsDataURL(file);
+  } else {
+    alarmAudio.src = soundVal;
+    alarmAudio.loop = false;
+    alarmAudio.play().catch(()=>{});
+  }
+});
 
 // Timer
 let timerInterval;
-let timerStartSeconds;
+let timerStartSeconds = 0;
+let timerRemaining = 0;
+let timerRunning = false;  // Are we actively counting down?
+let timerPaused = false;   // Did the user pause?
 
-startTimerBtn?.addEventListener("click", () => {
+startTimerBtn.addEventListener("click", () => {
+  // Start the timer fresh
   const min = parseInt(timerMinutesInput.value) || 0;
   const sec = parseInt(timerSecondsInput.value) || 0;
   timerStartSeconds = min * 60 + sec;
-  if (timerStartSeconds <= 0) return alert("Set time > 0");
-  startTimer(timerStartSeconds);
+  if (timerStartSeconds <= 0) {
+    alert("Set time > 0");
+    return;
+  }
+
+  timerRemaining = timerStartSeconds;
+  timerRunning = true;
+  timerPaused = false;
+
+  clearInterval(timerInterval);
+  startCountdown(timerStartSeconds);
 });
 
-function startTimer(seconds) {
-  clearInterval(timerInterval);
-  let remaining = seconds;
+function startCountdown(totalSeconds) {
+  let remaining = totalSeconds;
   updateTimerDisplay(remaining);
-  updateProgressCircle(remaining, seconds);
+  updateProgressCircle(remaining, totalSeconds);
 
   timerInterval = setInterval(() => {
+    if (timerPaused) return; // If paused, do nothing
+
     remaining--;
+    timerRemaining = remaining;
     updateTimerDisplay(remaining);
-    updateProgressCircle(remaining, seconds);
+    updateProgressCircle(remaining, totalSeconds);
+
     if (remaining <= 0) {
       clearInterval(timerInterval);
       timerEnd();
@@ -233,7 +273,35 @@ function startTimer(seconds) {
   }, 1000);
 }
 
+// Toggle pause/resume
+stopTimerBtn.addEventListener("click", () => {
+  if (!timerRunning) return; // If the timer hasn't been started yet, do nothing
+
+  if (!timerPaused) {
+    // Pause it
+    timerPaused = true;
+    stopTimerBtn.textContent = "Resume";
+  } else {
+    // Resume
+    timerPaused = false;
+    stopTimerBtn.textContent = "Pause";
+  }
+});
+
+resetTimerBtn.addEventListener("click", () => {
+  clearInterval(timerInterval);
+  timerRunning = false;
+  timerPaused = false;
+  stopTimerBtn.textContent = "Pause"; // Reset its label
+  // Reset visuals
+  const defMin = timerMinutesInput.value || 0;
+  const defSec = timerSecondsInput.value || 30;
+  timerDisplay.textContent = `${String(defMin).padStart(2,"0")}:${String(defSec).padStart(2,"0")}`;
+  timerProgressCircle.style.strokeDashoffset = 565.48;
+});
+
 function updateTimerDisplay(secs) {
+  if (secs < 0) secs = 0;
   const mm = String(Math.floor(secs / 60)).padStart(2, "0");
   const ss = String(secs % 60).padStart(2, "0");
   timerDisplay.textContent = `${mm}:${ss}`;
@@ -241,46 +309,42 @@ function updateTimerDisplay(secs) {
 
 function updateProgressCircle(current, total) {
   const ratio = (total - current) / total;
-  const length = 2 * Math.PI * 90;
+  const length = 2 * Math.PI * 90; // circumference for r=90
   timerProgressCircle.style.strokeDashoffset = length * (1 - ratio);
 }
 
 function timerEnd() {
   timerDisplay.textContent = "00:00";
+  // Play short ring
   alarmAudio.src = "audio/alarm1.mp3";
   alarmAudio.loop = false;
-  alarmAudio.play();
+  alarmAudio.play().catch(() => {});
+
+  // Stop after 3 seconds
   setTimeout(() => {
     alarmAudio.pause();
     alarmAudio.currentTime = 0;
   }, 3000);
 }
 
-stopTimerBtn?.addEventListener("click", () => clearInterval(timerInterval));
-resetTimerBtn?.addEventListener("click", () => {
-  clearInterval(timerInterval);
-  timerDisplay.textContent = "00:30";
-  timerProgressCircle.style.strokeDashoffset = 565.48;
-});
-
 // Stopwatch
 let stopwatchInterval = null;
 let stopwatchSeconds = 0;
 
-startStopwatchBtn?.addEventListener("click", () => {
-  if (stopwatchInterval) return;
+startStopwatchBtn.addEventListener("click", () => {
+  if (stopwatchInterval) return; // Already running
   stopwatchInterval = setInterval(() => {
     stopwatchSeconds++;
     updateStopwatchDisplay();
   }, 1000);
 });
 
-stopStopwatchBtn?.addEventListener("click", () => {
+stopStopwatchBtn.addEventListener("click", () => {
   clearInterval(stopwatchInterval);
   stopwatchInterval = null;
 });
 
-resetStopwatchBtn?.addEventListener("click", () => {
+resetStopwatchBtn.addEventListener("click", () => {
   clearInterval(stopwatchInterval);
   stopwatchInterval = null;
   stopwatchSeconds = 0;
@@ -307,6 +371,7 @@ function populateTimeZones() {
       timeZoneSelect.appendChild(opt);
     });
   } catch {
+    // Fallback if Intl.supportedValuesOf not supported
     ["UTC", "America/New_York", "Europe/London"].forEach(tz => {
       const opt = document.createElement("option");
       opt.value = tz;
@@ -331,12 +396,12 @@ function updateWorldClock() {
   worldClockDisplay.textContent = formatter.format(now);
 }
 
-setInterval(updateWorldClock, 1000);
-
 // Init
 window.addEventListener("load", () => {
   loadAlarms();
   populateTimeZones();
   checkAlarms();
 });
+
+// Unlock audio on first user interaction (helps iOS / mobile)
 document.body.addEventListener("click", unlockAudio, { once: true });
