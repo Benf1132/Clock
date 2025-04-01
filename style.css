@@ -1,99 +1,267 @@
+/* --------------------------
+   Base Styles
+---------------------------*/
 body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    max-width: 700px;
-    margin: 0 auto; /* center on larger screens */
-  }
-  
-  header {
-    background: #3f51b5;
-    color: #fff;
-    padding: 1em;
-    text-align: center;
-  }
-  
-  h1 {
-    margin: 0 0 10px;
-  }
-  
-  nav {
-    display: flex;
-    gap: 0.5rem;
-    justify-content: center;
-  }
-  
-  .nav-btn {
-    background: #fff;
-    color: #3f51b5;
-    border: 1px solid #3f51b5;
-    padding: 0.4em 0.8em;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  
-  .nav-btn:hover {
-    background: #e8eaf6;
-  }
-  
-  main {
-    padding: 1em;
-  }
-  
-  .page-section {
-    display: none;
-    margin-top: 1em;
-  }
-  
-  .page-section.active {
-    display: block;
-  }
-  
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 1em;
-  }
-  
-  table, th, td {
-    border: 1px solid #ccc;
-    padding: 0.5em;
-  }
-  
-  .timer-controls,
-  .stopwatch-controls {
-    display: flex;
-    gap: 1em;
-    margin-bottom: 1em;
-    align-items: center;
-  }
-  
-  .timer-display,
-  .stopwatch-display,
-  .world-clock-display {
-    font-size: 2em;
-    margin-top: 0.5em;
-    text-align: center;
-  }
-  
-  #alarmForm,
-  .timer-controls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5em;
-    align-items: center;
-  }
-  
-  #daysCheckboxes {
-    display: flex;
-    gap: 8px;
-  }
-  
-  button {
-    cursor: pointer;
-  }
-  
-  button:hover {
-    opacity: 0.9;
-  }
-  
+  font-family: 'Segoe UI', sans-serif;
+  margin: 0 auto;
+  padding: 0;
+  max-width: 900px;
+  background: #f4f6fa;
+  color: #333;
+  transition: background 0.4s ease, color 0.3s ease;
+}
+
+header {
+  background: linear-gradient(to right, #3f51b5, #5c6bc0);
+  color: white;
+  padding: 1.2em;
+  text-align: center;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+}
+
+nav {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 0.75em;
+}
+
+.nav-btn {
+  background: white;
+  color: #3f51b5;
+  border: 2px solid #3f51b5;
+  padding: 0.5em 1em;
+  border-radius: 30px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.3s ease;
+}
+
+.nav-btn:hover {
+  background: #3f51b5;
+  color: white;
+  transform: scale(1.05);
+}
+
+main {
+  padding: 1.5em;
+}
+
+/* --------------------------
+   Sections
+---------------------------*/
+.page-section {
+  display: none;
+  margin-top: 1.5em;
+  background: white;
+  padding: 1.5em;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+.page-section.active {
+  display: block;
+}
+
+/* --------------------------
+   Forms & Inputs
+---------------------------*/
+label {
+  font-weight: bold;
+  min-width: 90px;
+}
+
+input, select {
+  padding: 0.5em;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1em;
+}
+
+#daysCheckboxes {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+#daysCheckboxes label {
+  background: #e8eaf6;
+  padding: 0.4em 0.8em;
+  border-radius: 6px;
+  transition: background 0.3s, transform 0.2s;
+  cursor: pointer;
+}
+
+#daysCheckboxes label:hover {
+  background: #c5cae9;
+  transform: scale(1.05);
+}
+
+/* --------------------------
+   Buttons
+---------------------------*/
+button {
+  background: #3f51b5;
+  color: white;
+  border: none;
+  padding: 0.6em 1.2em;
+  border-radius: 6px;
+  font-size: 1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease-in-out;
+}
+
+button:hover {
+  background: #303f9f;
+  transform: scale(1.03);
+}
+
+/* --------------------------
+   Tables
+---------------------------*/
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1em;
+}
+table, th, td {
+  border: 1px solid #ccc;
+  padding: 0.75em;
+  text-align: center;
+  border-radius: 6px;
+}
+table thead {
+  background: #e8eaf6;
+}
+
+/* --------------------------
+   Displays
+---------------------------*/
+.stopwatch-display,
+.world-clock-display {
+  font-size: 2.2em;
+  text-align: center;
+  font-weight: bold;
+  color: #3f51b5;
+  background: #eef1fb;
+  padding: 1em;
+  border-radius: 12px;
+  margin: 1.2em auto;
+  max-width: 300px;
+}
+
+/* --------------------------
+   Timer Progress Circle
+---------------------------*/
+.progress-circle circle.bg {
+  fill: none;
+  stroke: #ccc;
+  stroke-width: 15;
+}
+
+.progress-circle circle.progress {
+  fill: none;
+  stroke: #3f51b5;
+  stroke-width: 15;
+  stroke-dasharray: 565.48;
+  stroke-dashoffset: 565.48;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+  transition: stroke-dashoffset 0.5s ease;
+}
+
+/* --------------------------
+   Modal Alarm Controls
+---------------------------*/
+.modal-controls {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 9999;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-box {
+  background: white;
+  padding: 2em;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+}
+
+/* --------------------------
+   Dark Mode Theme
+---------------------------*/
+body.dark {
+  background: #121212;
+  color: #f0f0f0;
+}
+
+body.dark header {
+  background: linear-gradient(to right, #2a2a2a, #1f1f1f);
+}
+
+body.dark .page-section {
+  background: #1f1f1f;
+  color: #e0e0e0;
+  box-shadow: none;
+}
+
+body.dark input,
+body.dark select,
+body.dark textarea,
+body.dark button,
+body.dark option {
+  background-color: #2a2a2a;
+  color: #ffffff;
+  border-color: #555;
+}
+
+body.dark table,
+body.dark th,
+body.dark td {
+  border-color: #444;
+}
+
+body.dark table thead {
+  background: #2f2f2f;
+}
+
+body.dark .nav-btn {
+  background: #1f1f1f;
+  color: #ddd;
+  border-color: #555;
+}
+
+body.dark .nav-btn:hover {
+  background: #3f51b5;
+  color: #fff;
+}
+
+body.dark .stopwatch-display,
+body.dark .world-clock-display {
+  background: #2c2c2c;
+  color: #ffffff;
+}
+
+body.dark #daysCheckboxes label {
+  background: #2c2c2c;
+  color: #e0e0e0;
+  border: 1px solid #555;
+}
+
+body.dark #daysCheckboxes label:hover {
+  background-color: #3f51b5;
+  color: white;
+}
+
+body.dark .modal-box {
+  background: #2a2a2a;
+  color: white;
+}
