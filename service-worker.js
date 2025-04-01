@@ -1,17 +1,16 @@
-// service-worker.js
-
-const CACHE_NAME = "pwa-clock-suite-v2";
+const CACHE_NAME = "pwa-clock-suite-v3";
 const FILES_TO_CACHE = [
   "/",
   "/index.html",
   "/style.css",
   "/app.js",
   "/manifest.json",
-  "/icons/clock1.png",
-  "/icons/clock2.png",
+  "/icons/clock1.jpg",
+  "/icons/clock2.jpg",
   "/audio/alarm1.mp3",
   "/audio/alarm2.mp3",
-  "/audio/alarm3.mp3"
+  "/audio/alarm3.mp3",
+  "/audio/alarm4.mp3"
 ];
 
 self.addEventListener("install", (event) => {
@@ -20,6 +19,22 @@ self.addEventListener("install", (event) => {
       return cache.addAll(FILES_TO_CACHE);
     })
   );
+  self.skipWaiting(); 
+});
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches.keys().then((keyList) =>
+      Promise.all(
+        keyList.map((key) => {
+          if (key !== CACHE_NAME) {
+            return caches.delete(key); 
+          }
+        })
+      )
+    )
+  );
+  self.clients.claim(); 
 });
 
 self.addEventListener("fetch", (event) => {
