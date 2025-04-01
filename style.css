@@ -338,13 +338,24 @@ body.dark .modal-box {
     display: block;
     margin-top: 0.8em;
   }
+.circle-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 1em;
+  overflow: visible;
+  width: 100%;
+}
 
-  .circle-container {
-    width: 100%;
-  }
+.progress-circle {
+  width: 200px;
+  height: 200px;
+  overflow: visible;
+}
 
+@media (max-width: 600px) {
   .progress-circle {
-    width: 150px;
-    height: 150px;
+    width: 180px;
+    height: 180px;
   }
 }
