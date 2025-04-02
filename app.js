@@ -211,26 +211,31 @@ testSoundBtn.addEventListener("click", () => {
   const file = soundFileInput.files[0];
   const soundVal = soundDropdown.value;
 
-  // Stop any currently playing audio first
-  alarmAudio.pause();
-  alarmAudio.currentTime = 0;
+  // Clear any previous timeout and stop existing audio
+  if (alarmAudio) {
+    alarmAudio.pause();
+    alarmAudio.currentTime = 0;
+  }
 
-  const playAndStop = (src) => {
+  const playForFiveSeconds = (src) => {
     alarmAudio.src = src;
-    alarmAudio.loop = false;
+    alarmAudio.loop = true; // Always loop to ensure it fills full 5 seconds
     alarmAudio.play().catch(() => {});
+
+    // Stop playback exactly after 5 seconds
     setTimeout(() => {
       alarmAudio.pause();
       alarmAudio.currentTime = 0;
-    }, 5000); // Stop after 5 seconds
+      alarmAudio.loop = false;
+    }, 5000);
   };
 
   if (soundVal === "custom" && file) {
     const reader = new FileReader();
-    reader.onload = e => playAndStop(e.target.result);
+    reader.onload = e => playForFiveSeconds(e.target.result);
     reader.readAsDataURL(file);
   } else {
-    playAndStop(soundVal);
+    playForFiveSeconds(soundVal);
   }
 });
 
@@ -330,7 +335,7 @@ function timerEnd() {
   setTimeout(() => {
     alarmAudio.pause();
     alarmAudio.currentTime = 0;
-  }, 5000);
+  }, 3000);
 }
 
 // Stopwatch
