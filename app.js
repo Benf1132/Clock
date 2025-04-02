@@ -28,6 +28,9 @@ const resetStopwatchBtn = document.getElementById("resetStopwatchBtn");
 
 const timeZoneSelect = document.getElementById("timeZoneSelect");
 const worldClockDisplay = document.getElementById("worldClockDisplay");
+const toggleHourFormat = document.getElementById("toggleHourFormat");
+toggleHourFormat?.addEventListener("change", updateWorldClock);
+
 
 const snoozeBtn = document.getElementById("snoozeBtn");
 const stopAlarmBtn = document.getElementById("stopAlarmBtn");
@@ -403,17 +406,27 @@ function populateTimeZones() {
 
 timeZoneSelect?.addEventListener("change", updateWorldClock);
 
+let worldClockInterval;
+
 function updateWorldClock() {
+  clearInterval(worldClockInterval);
   const tz = timeZoneSelect.value;
-  const now = new Date();
-  const formatter = new Intl.DateTimeFormat([], {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    timeZone: tz,
-    hour12: false
-  });
-  worldClockDisplay.textContent = formatter.format(now);
+  const use12Hour = document.getElementById("toggleHourFormat")?.checked;
+
+  const updateTime = () => {
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      timeZone: tz,
+      hour12: use12Hour
+    });
+    worldClockDisplay.textContent = formatter.format(now);
+  };
+
+  updateTime();
+  worldClockInterval = setInterval(updateTime, 1000);
 }
 
 // Init
@@ -421,6 +434,7 @@ window.addEventListener("load", () => {
   loadAlarms();
   populateTimeZones();
   checkAlarms();
+  updateWorldClock(); // 
 });
 
 // Unlock audio on first user interaction (helps iOS / mobile)
