@@ -130,6 +130,14 @@ button:hover {
   transform: scale(1.03);
 }
 
+.hour-format-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 1rem;
+}
+
 /* --------------------------
    Tables
 ---------------------------*/
