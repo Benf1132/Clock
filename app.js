@@ -53,12 +53,14 @@ function loadHourFormatPreference() {
 }
 
 function unlockAudio() {
-  // Attempt to play a short audio after a user gesture so mobile browsers allow future .play()
   const test = document.createElement("audio");
   test.src = "audio/alarm1.mp3";
+  test.volume = 0.01;
   test.play().then(() => {
-    test.pause();
-    test.currentTime = 0;
+    setTimeout(() => {
+      test.pause();
+      test.currentTime = 0;
+    }, 200);
   }).catch(() => {});
 }
 
