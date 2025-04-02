@@ -207,24 +207,30 @@ stopAlarmBtn.addEventListener("click", () => {
   if (snoozeTimeout) clearTimeout(snoozeTimeout);
 });
 
-// Test Sound Button
 testSoundBtn.addEventListener("click", () => {
   const file = soundFileInput.files[0];
   const soundVal = soundDropdown.value;
-  
-  // If custom chosen and file present
+
+  // Stop any currently playing audio first
+  alarmAudio.pause();
+  alarmAudio.currentTime = 0;
+
+  const playAndStop = (src) => {
+    alarmAudio.src = src;
+    alarmAudio.loop = false;
+    alarmAudio.play().catch(() => {});
+    setTimeout(() => {
+      alarmAudio.pause();
+      alarmAudio.currentTime = 0;
+    }, 5000); // Stop after 5 seconds
+  };
+
   if (soundVal === "custom" && file) {
     const reader = new FileReader();
-    reader.onload = e => {
-      alarmAudio.src = e.target.result;
-      alarmAudio.loop = false;
-      alarmAudio.play().catch(()=>{});
-    };
+    reader.onload = e => playAndStop(e.target.result);
     reader.readAsDataURL(file);
   } else {
-    alarmAudio.src = soundVal;
-    alarmAudio.loop = false;
-    alarmAudio.play().catch(()=>{});
+    playAndStop(soundVal);
   }
 });
 
