@@ -169,28 +169,38 @@ table thead {
 }
 
 /* --------------------------
-   Timer Pie Circle
+   Timer Progress Circle
 ---------------------------*/
 .circle-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   margin-top: 1em;
+  width: 100%;
+  overflow: visible;
 }
 
-.pie-progress {
+.progress-circle {
   width: 200px;
   height: 200px;
-  transform: rotate(-90deg); /* So progress starts at 12 o'clock */
+  overflow: visible;
 }
 
-.pie-progress .bg {
-  fill: #eee;
+.progress-circle circle.bg {
+  fill: none;
+  stroke: #ccc;
+  stroke-width: 15;
 }
 
-.pie-slice {
-  transition: d 0.5s linear;
-  fill: #3f51b5;
+.progress-circle circle.progress {
+  fill: none;
+  stroke: #3f51b5;
+  stroke-width: 15;
+  stroke-dasharray: 565.48;
+  stroke-dashoffset: 565.48;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+  transition: stroke-dashoffset 0.5s ease;
 }
 
 .circle-label {
@@ -199,7 +209,6 @@ table thead {
   font-weight: bold;
   color: #3f51b5;
 }
-
 
 /* --------------------------
    Modal Alarm Controls
@@ -347,10 +356,11 @@ body.dark .modal-box {
     margin-top: 0.8em;
   }
 
-.pie-progress {
+  .progress-circle {
     width: 180px;
     height: 180px;
   }
+
   .circle-label {
     font-size: 1.6em;
   }
