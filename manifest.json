@@ -1,6 +1,6 @@
 {
-  "name": "PWA Clock Suite",
-  "short_name": "ClockSuite",
+  "name": "Timesuite PWA",
+  "short_name": "TickTock Pro",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#121212", 
