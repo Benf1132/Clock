@@ -102,15 +102,142 @@
       </div>
     </section>
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PWA Clock Suite</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>PWA Clock Suite</h1>
+    <nav>
+      <button class="nav-btn" data-target="#alarmSection">Alarm</button>
+      <button class="nav-btn" data-target="#timerSection">Timer</button>
+      <button class="nav-btn" data-target="#stopwatchSection">Stopwatch</button>
+      <button class="nav-btn" data-target="#worldClockSection">World Clock</button>
+      <button id="darkModeToggle">🌙 Toggle Dark Mode</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- ALARM SECTION -->
+    <section id="alarmSection" class="page-section active">
+      <h2>Alarm Clock</h2>
+      <div id="alarmForm">
+        <label for="alarmTime">Alarm Time:</label>
+        <input type="time" id="alarmTime" required />
+
+        <label for="alarmDuration">Ring Duration (secs):</label>
+        <input type="number" id="alarmDuration" min="1" value="30" />
+
+        <label>Repeat Days:</label>
+        <div id="daysCheckboxes">
+          <label><input type="checkbox" value="0" />Sun</label>
+          <label><input type="checkbox" value="1" />Mon</label>
+          <label><input type="checkbox" value="2" />Tue</label>
+          <label><input type="checkbox" value="3" />Wed</label>
+          <label><input type="checkbox" value="4" />Thu</label>
+          <label><input type="checkbox" value="5" />Fri</label>
+          <label><input type="checkbox" value="6" />Sat</label>
+        </div>
+
+        <label for="soundDropdown">Choose Alarm Sound:</label>
+        <select id="soundDropdown">
+          <option value="audio/alarm1.mp3">Alarm 1</option>
+          <option value="audio/alarm2.mp3">Alarm 2</option>
+          <option value="audio/alarm3.mp3">Alarm 3</option>
+          <option value="audio/alarm4.mp3">Alarm 4</option>
+          <option value="custom">Custom File...</option>
+        </select>
+
+        <button id="testSoundBtn">Test Sound</button>
+
+        <label id="customFileLabel" for="soundFile" style="display:none;">Custom Sound File:</label>
+        <input type="file" id="soundFile" accept="audio/*" style="display:none;" />
+
+        <button id="setAlarmBtn">Set Alarm</button>
+      </div>
+
+      <hr />
+      <h3>Alarms</h3>
+      <table>
+        <thead>
+          <tr><th>Time</th><th>Days</th><th>Duration</th><th>Sound</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="alarmsTbody"></tbody>
+      </table>
+    </section>
+
+    <!-- TIMER SECTION -->
+    <section id="timerSection" class="page-section">
+      <h2>Countdown Timer</h2>
+      <div class="timer-controls">
+        <label for="timerMinutes">Minutes:</label>
+        <input type="number" id="timerMinutes" min="0" value="0" />
+
+        <label for="timerSeconds">Seconds:</label>
+        <input type="number" id="timerSeconds" min="0" max="59" value="30" />
+
+        <button id="startTimerBtn">Start</button>
+        <button id="stopTimerBtn">Pause</button>
+        <button id="resetTimerBtn">Reset</button>
+      </div>
+      <div class="circle-container">
+       <svg class="progress-circle" viewBox="0 0 200 200">
+          <circle class="bg" cx="100" cy="100" r="90"/>
+          <circle class="progress" cx="100" cy="100" r="90"/>
+        </svg>
+        <div class="circle-label" id="timerDisplay">00:30</div>
+      </div>
+    </section>
+
+    <!-- STOPWATCH SECTION -->
+    <section id="stopwatchSection" class="page-section">
+      <h2>Stopwatch</h2>
+      <div class="stopwatch-display" id="stopwatchDisplay">00d 00h 00m 00s</div>
+      <div class="stopwatch-controls">
+        <button id="startStopwatchBtn">Start</button>
+        <button id="stopStopwatchBtn">Stop</button>
+        <button id="resetStopwatchBtn">Reset</button>
+      </div>
+    </section>
+
     <!-- WORLD CLOCK SECTION -->
     <section id="worldClockSection" class="page-section">
       <h2>World Clock</h2>
       <label for="timeZoneSelect">Select Time Zone:</label>
       <select id="timeZoneSelect"></select>
+    
+      <label class="hour-format-toggle">
+        <input type="checkbox" id="toggleHourFormat">
+        12-Hour Format
+      </label>
+    
       <div class="world-clock-display">
         <span id="worldClockDisplay">--:--:--</span>
       </div>
     </section>
+  </main>
+
+  <audio id="alarmAudio" preload="auto" playsinline></audio>
+
+  <!-- MODAL -->
+  <div id="alarmControls" class="modal-controls">
+    <div class="modal-box">
+      <p>⏰ Alarm Ringing</p>
+      <button id="snoozeBtn">Snooze 5 Min</button>
+      <button id="stopAlarmBtn">Stop Alarm</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
+
   </main>
 
   <audio id="alarmAudio" preload="auto" playsinline></audio>
