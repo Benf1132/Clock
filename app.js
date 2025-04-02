@@ -211,22 +211,31 @@ testSoundBtn.addEventListener("click", () => {
   const file = soundFileInput.files[0];
   const soundVal = soundDropdown.value;
 
-  // Clear any previous timeout and stop existing audio
-  if (alarmAudio) {
-    alarmAudio.pause();
-    alarmAudio.currentTime = 0;
-  }
+  // Stop any currently playing audio
+  alarmAudio.pause();
+  alarmAudio.currentTime = 0;
+
+  let stopTimeout;
+  let endedHandler;
 
   const playForFiveSeconds = (src) => {
     alarmAudio.src = src;
-    alarmAudio.loop = true; // Always loop to ensure it fills full 5 seconds
+
+    endedHandler = () => {
+      // If audio ends before 5 seconds, restart it
+      alarmAudio.currentTime = 0;
+      alarmAudio.play().catch(() => {});
+    };
+
+    alarmAudio.addEventListener("ended", endedHandler);
+
     alarmAudio.play().catch(() => {});
 
-    // Stop playback exactly after 5 seconds
-    setTimeout(() => {
+    // After 5 seconds, stop everything
+    stopTimeout = setTimeout(() => {
       alarmAudio.pause();
       alarmAudio.currentTime = 0;
-      alarmAudio.loop = false;
+      alarmAudio.removeEventListener("ended", endedHandler);
     }, 5000);
   };
 
