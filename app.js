@@ -324,7 +324,7 @@ function timerEnd() {
   setTimeout(() => {
     alarmAudio.pause();
     alarmAudio.currentTime = 0;
-  }, 3000);
+  }, 5000);
 }
 
 // Stopwatch
