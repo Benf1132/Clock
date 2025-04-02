@@ -29,8 +29,6 @@ const resetStopwatchBtn = document.getElementById("resetStopwatchBtn");
 const timeZoneSelect = document.getElementById("timeZoneSelect");
 const worldClockDisplay = document.getElementById("worldClockDisplay");
 const toggleHourFormat = document.getElementById("toggleHourFormat");
-toggleHourFormat?.addEventListener("change", updateWorldClock);
-
 
 const snoozeBtn = document.getElementById("snoozeBtn");
 const stopAlarmBtn = document.getElementById("stopAlarmBtn");
@@ -39,6 +37,20 @@ const alarmControls = document.getElementById("alarmControls");
 let activeAlarm = null;
 let snoozeTimeout = null;
 let alarms = [];
+
+toggleHourFormat?.addEventListener("change", () => {
+  localStorage.setItem("hourFormat", toggleHourFormat.checked ? "12" : "24");
+  updateWorldClock();
+});
+
+function loadHourFormatPreference() {
+  const savedFormat = localStorage.getItem("hourFormat");
+  if (savedFormat === "12") {
+    toggleHourFormat.checked = true;
+  } else {
+    toggleHourFormat.checked = false;
+  }
+}
 
 function unlockAudio() {
   // Attempt to play a short audio after a user gesture so mobile browsers allow future .play()
@@ -434,7 +446,8 @@ window.addEventListener("load", () => {
   loadAlarms();
   populateTimeZones();
   checkAlarms();
-  updateWorldClock(); // 
+  loadHourFormatPreference(); 
+  updateWorldClock(); 
 });
 
 // Unlock audio on first user interaction (helps iOS / mobile)
