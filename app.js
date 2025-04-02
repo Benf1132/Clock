@@ -271,7 +271,6 @@ let timerRunning = false;  // Are we actively counting down?
 let timerPaused = false;   // Did the user pause?
 
 startTimerBtn.addEventListener("click", () => {
-  // Start the timer fresh
   const min = parseInt(timerMinutesInput.value) || 0;
   const sec = parseInt(timerSecondsInput.value) || 0;
   timerStartSeconds = min * 60 + sec;
@@ -284,9 +283,11 @@ startTimerBtn.addEventListener("click", () => {
   timerRunning = true;
   timerPaused = false;
 
+  stopTimerBtn.textContent = "Pause";
   clearInterval(timerInterval);
   startCountdown(timerStartSeconds);
 });
+
 
 function startCountdown(totalSeconds) {
   let remaining = totalSeconds;
